@@ -12,6 +12,10 @@ GET     /signup                     controllers.AuthController.register
 POST    /register                   controllers.AuthController.registerUser
 GET     /logout                     controllers.AuthController.logout
 
+POST    /api/createTag              controllers.TagController.createTag
+POST    /api/deleteTag              controllers.TagController.deleteTag
+GET     /api/getTags                controllers.TagController.getTags
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
