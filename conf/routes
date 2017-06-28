@@ -14,7 +14,7 @@ GET     /logout                     controllers.AuthController.logout
 
 POST    /api/createTag              controllers.TagController.createTag
 POST    /api/deleteTag              controllers.TagController.deleteTag
-GET     /api/getTags                controllers.TagController.getTags
+GET     /api/tags                controllers.TagController.getTags
 
 
 # Map static resources from the /public folder to the /assets URL path

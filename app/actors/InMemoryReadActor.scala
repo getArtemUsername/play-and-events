@@ -14,9 +14,9 @@ import dao.InMemoryReadDao
 
 class InMemoryReadActor(logRecords: Seq[LogRecord]) extends Actor {
   import InMemoryReadActor._
-  
+
   val readDao = new InMemoryReadDao(logRecords)
-  
+
   override def receive: Receive = {
     case InitializeState => readDao.init()
     case GetTags => sender() ! readDao.getTags
@@ -28,7 +28,8 @@ object InMemoryReadActor {
   case class ProcessEvent(event: LogRecord)
   case object InitializeState
   case object GetTags
-  
+
+
   val name = "in-memory-read-actor"
   val path = s"/user/$name"
   def props(logRecords: Seq[LogRecord]) = Props(new InMemoryReadActor(logRecords))

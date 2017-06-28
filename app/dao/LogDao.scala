@@ -20,7 +20,7 @@ class LogDao {
     NamedDB('eventstore).localTx {
       implicit session =>
         val jsonStr = event.data.toString
-        sql"""INSERT INTO events(record_id, aciton_name, event_data, timestamp) 
+        sql"""INSERT INTO logs(record_id, action_name, event_data, timestamp) 
               VALUES (${event.id}, ${event.action}, ${jsonStr}, ${event.timestamp})
            """.update.apply
     }

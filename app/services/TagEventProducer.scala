@@ -14,6 +14,7 @@ import org.joda.time.DateTime
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   *
