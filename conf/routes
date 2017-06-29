@@ -4,6 +4,7 @@
 
 GET     /                           controllers.MainController.index
 GET     /500                        controllers.MainController.error500
+GET     /api/sse                    controllers.MainController.serverEventStream
 
 # Security
 GET     /login                      controllers.AuthController.login
@@ -14,7 +15,7 @@ GET     /logout                     controllers.AuthController.logout
 
 POST    /api/createTag              controllers.TagController.createTag
 POST    /api/deleteTag              controllers.TagController.deleteTag
-GET     /api/tags                controllers.TagController.getTags
+GET     /api/tags                   controllers.TagController.getTags
 
 
 # Map static resources from the /public folder to the /assets URL path

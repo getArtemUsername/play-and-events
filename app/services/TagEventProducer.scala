@@ -11,6 +11,7 @@ import com.appliedscala.events.{EventData, LogRecord, TagCreated, TagDeleted}
 import dao.LogDao
 import model.Tag
 import org.joda.time.DateTime
+import play.api.Configuration
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -24,38 +25,26 @@ import scala.concurrent.ExecutionContext.Implicits.global
   *
   * @author artem klevakin
   */
-class TagEventProducer(actorSystem: ActorSystem, logDao: LogDao, readService: ReadService) {
+class TagEventProducer(actorSystem: ActorSystem,
+                       configuration: Configuration) {
+  
+  val kafkaProducer = new ServiceKafkaProducer("tags", actorSystem, configuration)
 
   private def createLogRecord(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action, eventData.json, DateTime.now())
   }
   
-  def createTag(text: String, createdBy: UUID): Future[Seq[Tag]] = {
+  def createTag(text: String, createdBy: UUID): Unit = {
     val tagId = UUID.randomUUID()
     val event = TagCreated(tagId, text, createdBy)
     val record = createLogRecord(event)
-    
-    logDao.insertLogRecord(record) match {
-      case Failure(th) => Future.failed(th)
-      case Success(_) => adjustReadState(record)
-    }
+    kafkaProducer.send(record.encode)
+
   }
 
-  def deleteTag(tagId: UUID, deletedBy: UUID): Future[Seq[Tag]] = {
+  def deleteTag(tagId: UUID, deletedBy: UUID): Unit = {
     val event = TagDeleted(tagId, deletedBy)
     val record = createLogRecord(event)
-    logDao.insertLogRecord(record) match {
-      case Failure(th) => Future.failed(th)
-      case Success(_) => adjustReadState(record)
-    }
+    kafkaProducer.send(record.encode)
   }
-  
-  private def adjustReadState(logRecord: LogRecord): Future[Seq[Tag]] = {
-    implicit val timeout = Timeout(5, TimeUnit.MINUTES)
-    val actor = actorSystem.actorSelection(InMemoryReadActor.path)
-    (actor ? InMemoryReadActor.ProcessEvent(logRecord)).flatMap {
-      _ => readService.getTags
-    }
-  }
-
 }

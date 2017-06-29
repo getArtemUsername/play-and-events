@@ -4,7 +4,7 @@ import java.util.UUID
 
 import play.api.data.Form
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Action, AnyContent, Controller, Result}
 import security.UserAuthAction
 import services.{ReadService, TagEventProducer}
 
@@ -40,32 +40,30 @@ class TagController(tagEventProducer: TagEventProducer,
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.Future
 
-  def getTags = Action.async {
+  def getTags: Action[AnyContent] = Action.async {
     val tagsF = readService.getTags
     tagsF map { tags => Ok(Json.toJson(tags)) }
   }
 
 
-  def createTag() = userAuthAction.async {
+  def createTag(): Action[AnyContent] = userAuthAction {
     implicit request =>
       createTagForm.bindFromRequest.fold(
-        formWithErrors => Future.successful(BadRequest),
+        formWithErrors => BadRequest,
         data => {
-          tagEventProducer.createTag(data.text, request.user.userId) map {
-            tags => Ok(Json.toJson(tags))
-          }
+          tagEventProducer.createTag(data.text, request.user.userId)
+          Ok
         }
       )
   }
 
-  def deleteTag() = userAuthAction.async {
+  def deleteTag(): Action[AnyContent]  = userAuthAction {
     implicit request =>
       deleteTagForm.bindFromRequest.fold(
-        formWithErrors => Future.successful(BadRequest),
+        formWithErrors => BadRequest,
         data => {
-          tagEventProducer.deleteTag(data.id, request.user.userId) map {
-            tags => Ok(Json.toJson(tags))
-          }
+          tagEventProducer.deleteTag(data.id, request.user.userId)
+          Ok
         }
       )
   }
