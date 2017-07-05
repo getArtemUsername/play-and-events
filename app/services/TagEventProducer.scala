@@ -18,12 +18,7 @@ import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
-  *
   * TagEventProducer class
-  * <p/>
-  * Description...
-  *
-  * @author artem klevakin
   */
 class TagEventProducer(actorSystem: ActorSystem,
                        configuration: Configuration) {

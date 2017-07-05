@@ -12,11 +12,13 @@ import play.api.libs.EventSource
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
+import services.ConsumerAggregator
 
 
 class MainController(userAuthAction: UserAuthAction,
                      userAwareAction: UserAwareAction,
                      actorSystem: ActorSystem,
+                     consumerAggregator: ConsumerAggregator,
                      mat: Materializer) extends Controller {
 
   def serverEventStream = userAwareAction { request =>

@@ -12,12 +12,7 @@ import model.ServerSentMessage
 import play.api.Configuration
 
 /**
-  *
   * TagEventConsumer class
-  * <p/>
-  * Description...
-  *
-  * @author artem klevakin
   */
 class TagEventConsumer(readService: ReadService, actorSystem: ActorSystem, 
                        configuration: Configuration, materializer: Materializer) {
@@ -31,6 +26,7 @@ class TagEventConsumer(readService: ReadService, actorSystem: ActorSystem,
   }
   
   private def adjustReadState(logRecord: LogRecord): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     implicit val timeout = Timeout.apply(5, TimeUnit.SECONDS)
     val imrActor = actorSystem.actorSelection(InMemoryReadActor.path)
     (imrActor ? InMemoryReadActor.ProcessEvent(logRecord)).foreach {

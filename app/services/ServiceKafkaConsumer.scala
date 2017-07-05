@@ -12,12 +12,7 @@ import play.api.Configuration
 import scala.concurrent.Future
 
 /**
-  *
   * ServiceKafkaConsumer class
-  * <p/>
-  * Description...
-  *
-  * @author artem klevakin
   */
 class ServiceKafkaConsumer(topicNames: Set[String], groupName: String, implicit val mat: Materializer,
                            actorSystem: ActorSystem, configuration: Configuration, handleEvent: String => Unit) {

@@ -7,12 +7,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import play.api.Configuration
 
 /**
-  *
   * ServiceKafkaProducer class
-  * <p/>
-  * Description...
-  *
-  * @author artem klevakin
   */
 class ServiceKafkaProducer(topicName: String, actorSystem: ActorSystem,
                            configuration: Configuration) {

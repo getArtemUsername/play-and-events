@@ -11,10 +11,13 @@ class TagManager extends React.Component {
     };
 
     componentDidMount = () => {
+        console.info("tag manager mount");
         axios.get('/api/tags').then(this.handleResponse);
     };
 
     handleResponse = (response) => {
+        console.info("handleResponse");
+        console.info(response);
         if (response.status === 200) {
             this.props.dispatch({
                 type: 'tags_updated',
@@ -26,8 +29,9 @@ class TagManager extends React.Component {
     };
 
     addTag = () => {
+        console.info("addTag");
         const text = this.state.text;
-        const isValid = this.state.tags.findIndex((el) => {
+        const isValid = this.props.tags.findIndex((el) => {
                 return el.text === text;
             }) === -1;
         if (isValid) {
@@ -40,12 +44,14 @@ class TagManager extends React.Component {
     };
 
     deleteTag = (id) => {
+        console.info("deleteTag" + id);
         return () => {
             axios.post('/api/deleteTag', {'id': id});
         };
     };
 
     handleInput = (event) => {
+        console.info("handleInput " + event.toString());
         this.setState({
             text: event.target.value
         });
@@ -53,12 +59,15 @@ class TagManager extends React.Component {
 
     handleKeyPress = (event) => {
         if (event.key === 'Enter') {
+            console.info("Press Enter");
             this.addTag();
         }
     };
 
     render = () => {
-        const tags = this.state.tags;
+        const tags = this.props.tags;
+        console.info(tags);
+        console.info(this.props.tags);
         return <div className="tag-manager">
             <div className="tag-manager__input-panel">
                 <div className="tag-manager__input-panel_input">
@@ -87,6 +96,8 @@ class TagManager extends React.Component {
 }
 
 const mapStateToProps = (state) => {
+    console.info("mapStateToProps ");
+    console.info(state);
     return {tags: state.tags}
 };
 

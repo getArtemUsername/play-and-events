@@ -14,11 +14,7 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 /**
-  *
   * ReadService class
-  * <p/>
-  * Description...
-  *
   */
 class ReadService(actorSystem: ActorSystem, logDao: LogDao) {
   init()
