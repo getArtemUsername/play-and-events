@@ -2,6 +2,7 @@ package actors
 
 import java.util.UUID
 
+import actors.ValidationActor.{RefreshStateCommand, ValidationEventRequest}
 import akka.actor.{Actor, Props}
 import com.appliedscala.events.{LogRecord, TagCreated}
 import scalikejdbc._
@@ -12,7 +13,17 @@ import scala.util.{Failure, Success, Try}
   * ValidationActor class
   */
 class ValidationActor extends Actor {
-  override def receive: Receive = ???
+  override def receive: Receive = {
+    case ValidationEventRequest(event) => 
+      sender() ! processSingleEvent(event, skipValidation = false)
+    case RefreshStateCommand(events, fromScratch) =>
+      val resetResult = resetState(fromScratch)
+      resetResult match {
+        case Some(_) => resetResult
+        case None => processEvents(events, skipValidation = true)
+      }
+    case _ => sender() ! Some("Unknown message type!")
+  }
 
   private def validateTagCreated(tagText: String): Option[String] = {
 
@@ -143,11 +154,24 @@ class ValidationActor extends Actor {
         event =>
           lastResult match {
             case None => lastResult = processSingleEvent(event, skipValidation)
-            case Some(_) => None
+            case Some(_) => break()
           }
       }
     }
     lastResult
+  }
+  
+  private def resetState(fromScratch: Boolean): Option[String] =  {
+    if (!fromScratch) None
+    else invokeUpdate {
+      NamedDB('validation).localTx {
+        implicit session =>
+          sql"delete from tags where 1 > 0".update().apply()
+          sql"delete from active_users where 1 > 0".update().apply()
+          sql"delete from question_user where 1 > 0".update().apply()
+          sql"delete from tag_question where 1 > 0".update().apply()
+      }
+    }
   }
 }
 
