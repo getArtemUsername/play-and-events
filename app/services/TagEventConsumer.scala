@@ -8,6 +8,7 @@ import akka.stream.Materializer
 import akka.pattern.ask
 import akka.util.Timeout
 import com.appliedscala.events.LogRecord
+import dao.Neo4JReadDao
 import model.ServerSentMessage
 import play.api.Configuration
 
@@ -15,7 +16,8 @@ import play.api.Configuration
   * TagEventConsumer class
   */
 class TagEventConsumer(readService: ReadService, actorSystem: ActorSystem, 
-                       configuration: Configuration, materializer: Materializer) {
+                       configuration: Configuration, materializer: Materializer,
+                       neo4JReadDao: Neo4JReadDao) {
   val topicName = "tags"
   val serviceKafkaConsumer = new ServiceKafkaConsumer(Set(topicName), "read", materializer, actorSystem, 
     configuration, handleEvent)
@@ -26,17 +28,13 @@ class TagEventConsumer(readService: ReadService, actorSystem: ActorSystem,
   }
   
   private def adjustReadState(logRecord: LogRecord): Unit = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    implicit val timeout = Timeout.apply(5, TimeUnit.SECONDS)
-    val imrActor = actorSystem.actorSelection(InMemoryReadActor.path)
-    (imrActor ? InMemoryReadActor.ProcessEvent(logRecord)).foreach {
-      _ => 
-        readService.getTags.foreach {
-          tags =>
-            val update = ServerSentMessage.create("tags", tags)
-            val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-            esActor ! EventStreamActor.DataUpdated(update.json)
-        }
+    neo4JReadDao.handleEvent(logRecord)
+    val tagsT = neo4JReadDao.getAllTags
+    tagsT.foreach {
+      tags => 
+        val update = ServerSentMessage.create("tags", tags)
+        val eaActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
+        eaActor ! EventStreamActor.DataUpdated(update.json)
     }
   }
 }

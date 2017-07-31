@@ -12,7 +12,7 @@ import play.api.mvc.{Cookie, RequestHeader}
 import scala.concurrent.duration.Duration
 import scala.util.{Success, Try}
 
-class AuthService(sessionDao: SessionDao, userDao: UserDao) {
+class AuthService(sessionDao: SessionDao, userDao: UserDao, userEventProducer: UserEventProducer) {
 
   val mda = MessageDigest.getInstance("SHA-512")
   val cookieHeader = "X-Auth-Token"
@@ -27,6 +27,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao) {
   def register(userCode: String, fullName: String, password: String): Try[Cookie] = {
     val userT = userDao.insertUser(userCode, fullName, password)
     userT.flatMap { user =>
+      userEventProducer.activateUser(user.userId)
       createCookie(user)
     }
   }

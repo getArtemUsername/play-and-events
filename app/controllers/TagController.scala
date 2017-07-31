@@ -8,6 +8,8 @@ import play.api.mvc.{Action, AnyContent, Controller, Result}
 import security.UserAuthAction
 import services.{ReadService, TagEventProducer}
 
+import scala.util.{Failure, Success}
+
 /**
   *
   * TagController class
@@ -40,9 +42,12 @@ class TagController(tagEventProducer: TagEventProducer,
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.Future
 
-  def getTags: Action[AnyContent] = Action.async {
-    val tagsF = readService.getTags
-    tagsF map { tags => Ok(Json.toJson(tags)) }
+  def getTags: Action[AnyContent] = Action {
+    val tagsT = readService.getAllTags
+    tagsT match  {
+      case Failure(th) => InternalServerError
+      case Success(tags) => Ok(Json.toJson(tags))
+    }
   }
 
 

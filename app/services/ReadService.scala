@@ -6,36 +6,34 @@ import actors.InMemoryReadActor
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import akka.pattern.ask
-import dao.LogDao
-import model.Tag
+import dao.{LogDao, Neo4JReadDao}
+import model.{Question, Tag}
 import play.api.Logger
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * ReadService class
   */
-class ReadService(actorSystem: ActorSystem, logDao: LogDao) {
-  init()
+class ReadService(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem, logDao: LogDao,
+                  userService: UserService) {
 
-  private def init(): Unit = {
-    val logRecordsT = logDao.getLogRecords
-
-    logRecordsT match {
-      case Failure(th) =>
-        Logger.error("Error while init the read service", th)
-        throw th
-      case Success(logRecords) =>
-        val actor = actorSystem
-          .actorOf(InMemoryReadActor.props(logRecords), InMemoryReadActor.name)
-        actor ! InMemoryReadActor.InitializeState
-    }
+  def getAllTags: Try[Seq[Tag]] = {
+    neo4JReadDao.getAllTags
   }
-
-  def getTags: Future[Seq[Tag]] = {
-    implicit val timeout = Timeout(5, TimeUnit.MINUTES)
-    val actor = actorSystem.actorSelection(InMemoryReadActor.path)
-    (actor ? InMemoryReadActor.GetTags).mapTo[Seq[Tag]]
+  
+  def getAllQuestions: Try[Seq[Question]] = {
+    val namesT = userService.getUserFullNameMap
+    val questionsT = neo4JReadDao.getQuestions
+    for {
+      names <- namesT
+      questions <- questionsT
+    } yield {
+      questions.map {
+        question =>
+          question.copy(authorFullName = names.get(question.authorId))
+      }
+    }
   }
 }

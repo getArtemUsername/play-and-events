@@ -24,7 +24,7 @@ class AppLoader extends ApplicationLoader {
 }
 
 trait AppComponents extends BuiltInComponents
- with EvolutionsComponents with DBComponents with HikariCPComponents {
+  with EvolutionsComponents with DBComponents with HikariCPComponents {
   lazy val assets: Assets = wire[Assets]
   lazy val prefix: String = "/"
   lazy val router: Router = wire[Routes]
@@ -36,11 +36,15 @@ trait AppComponents extends BuiltInComponents
   lazy val tagController = wire[TagController]
   lazy val eventValidator = wire[EventValidator]
   lazy val validationService = wire[ValidationService]
-  
+
+  lazy val neo4JReadDao = wire[Neo4JReadDao]
+  lazy val neo4JQueryExecutor = wire[Neo4JQueryExecutor]
+
   lazy val tagEventConsumer = wire[TagEventConsumer]
   lazy val logRecordConsumer = wire[LogRecordConsumer]
+  lazy val userEventConsumer = wire[UserEventConsumer]
   lazy val consumerAggregator = wire[ConsumerAggregator]
-  
+
   lazy val logDao = wire[LogDao]
   lazy val sessionDao = wire[SessionDao]
 
@@ -52,6 +56,7 @@ trait AppComponents extends BuiltInComponents
   lazy val userAwareAction = wire[UserAwareAction]
   lazy val readService = wire[ReadService]
   lazy val tagEventProducer = wire[TagEventProducer]
+  lazy val userEventProducer = wire[UserEventProducer]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 
