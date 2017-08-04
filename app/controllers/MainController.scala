@@ -12,13 +12,14 @@ import play.api.libs.EventSource
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
-import services.ConsumerAggregator
+import services.{ConsumerAggregator, RewindService}
 
 
 class MainController(userAuthAction: UserAuthAction,
                      userAwareAction: UserAwareAction,
                      actorSystem: ActorSystem,
                      consumerAggregator: ConsumerAggregator,
+                     rewindService: RewindService,
                      mat: Materializer) extends Controller {
 
   def serverEventStream = userAwareAction { request =>
@@ -33,6 +34,11 @@ class MainController(userAuthAction: UserAuthAction,
       .runWith(Sink.asPublisher(fanout = true))
     val source = Source.fromPublisher(eventStorePublisher)
     Ok.chunked(source.via(EventSource.flow)).as("text/event-stream")
+  }
+  
+  def rewind = Action {
+    request =>
+      rewindService.refreshState(); Ok
   }
 
   def index = userAwareAction { request =>

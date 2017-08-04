@@ -12,7 +12,7 @@ import play.api.Configuration
   */
 class LogRecordConsumer(logDao: LogDao, actorSystem: ActorSystem, configuration: Configuration,
                         materializer: Materializer) {
-  val topics: Set[String] = Seq("tags", "users").toSet
+  val topics: Set[String] = Seq("tags", "users", "questions").toSet
   val serviceKafkaConsumer = new ServiceKafkaConsumer(topics, "logs", materializer, actorSystem,
     configuration, handleEvent)
   

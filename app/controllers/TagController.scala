@@ -4,7 +4,7 @@ import java.util.UUID
 
 import play.api.data.Form
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Controller, Result}
+import play.api.mvc.{Action, AnyContent, Controller}
 import security.UserAuthAction
 import services.{ReadService, TagEventProducer}
 
@@ -38,9 +38,6 @@ class TagController(tagEventProducer: TagEventProducer,
       "id" -> uuid
     )(DeleteTagData.apply)(DeleteTagData.unapply)
   }
-
-  import scala.concurrent.ExecutionContext.Implicits.global
-  import scala.concurrent.Future
 
   def getTags: Action[AnyContent] = Action {
     val tagsT = readService.getAllTags

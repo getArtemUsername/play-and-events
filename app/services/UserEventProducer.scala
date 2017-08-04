@@ -17,13 +17,13 @@ class UserEventProducer(actorSystem: ActorSystem, configuration: Configuration,
   def activateUser(userId: UUID): Unit = {
     val event = UserActivated(userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validatiteAndSend(userId, record, kafkaProducer)
+    eventValidator.validateAndSend(userId, record, kafkaProducer)
   }
   
   def deactivateUser(userId: UUID): Unit = {
     val event = UserDeactivated(userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validatiteAndSend(userId, record, kafkaProducer)
+    eventValidator.validateAndSend(userId, record, kafkaProducer)
   }
 
 }

@@ -106,38 +106,38 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   def getQuestions: Try[Seq[Question]] = {
     val query =
-    """match (q:Question) return q"""
+      """match (q:Question) return q"""
     val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
     recordsT.map {
       records =>
-      records.map {
-        record =>
-        val id = record.get("id").asString
-        val title = record.get("title").asString
-        val details = Option(record.get("details").asString)
-        val tags = getTagsForQuestion(id)
-        val created = record.get("created").asString
-        val authorId = getAuthorId(id)
-        val authorFullName = record.get("authorFullName").asString
-        Question(UUID.fromString(id), title, details, tags, BaseTypes.parseISO8601(created),
-        UUID.fromString(authorId), Option(authorFullName))
-      }
+        records.map {
+          record =>
+            val id = record.get("id").asString
+            val title = record.get("title").asString
+            val details = Option(record.get("details").asString)
+            val tags = getTagsForQuestion(id)
+            val created = record.get("created").asString
+            val authorId = getAuthorId(id)
+            val authorFullName = record.get("authorFullName").asString
+            Question(UUID.fromString(id), title, details, tags, BaseTypes.parseISO8601(created),
+              UUID.fromString(authorId), Option(authorFullName))
+        }
     }
   }
 
   def getAllTags: Try[Seq[Tag]] = {
     val query =
-    """match (t:Tag) return t.tagId as tagId, 
+      """match (t:Tag) return t.tagId as tagId, 
         |t.tagText as tagText order by tagText""".stripMargin
     val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
     recordsT.map {
       records =>
-      records.map {
-        record =>
-        val id = record.get("tagId").asString
-        val text = record.get("tagText").asString
-        Tag(UUID.fromString(id), text)
-      }
+        records.map {
+          record =>
+            val id = record.get("tagId").asString
+            val text = record.get("tagText").asString
+            Tag(UUID.fromString(id), text)
+        }
     }
   }
 
@@ -172,23 +172,23 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
             record.get("id").asString()
         }
     } match {
-      case Success(head::_) => head
+      case Success(head :: _) => head
       case _ => "no author id"
     }
   }
-  
+
   private def rebuildState(events: Seq[LogRecord]): Try[Unit] = {
     val updates = events.flatMap {
       event =>
-      prepareUpdates(event).queries
+        prepareUpdates(event).queries
     }
     queryExecutor.executeBatch(updates)
   }
 
   def refreshState(events: Seq[LogRecord], fromScratch: Boolean): Try[Unit] = {
     for {
-    _ <- clear(fromScratch)
-    _ <- rebuildState(events)
+      _ <- clear(fromScratch)
+      _ <- rebuildState(events)
     } yield ()
   }
 

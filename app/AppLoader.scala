@@ -1,13 +1,16 @@
+import com.softwaremill.macwire._
 import controllers.Assets
+import controllers.AuthController
+import controllers.MainController
+import controllers.QuestionController
+import controllers.TagController
+import dao._
 import play.api.ApplicationLoader.Context
 import play.api._
-import play.api.db.{DBComponents, HikariCPComponents}
 import play.api.db.evolutions.{DynamicEvolutions, EvolutionsComponents}
+import play.api.db.{DBComponents, HikariCPComponents}
 import play.api.routing.Router
 import router.Routes
-import com.softwaremill.macwire._
-import controllers.{AuthController, MainController, TagController}
-import dao._
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services._
@@ -57,6 +60,11 @@ trait AppComponents extends BuiltInComponents
   lazy val readService = wire[ReadService]
   lazy val tagEventProducer = wire[TagEventProducer]
   lazy val userEventProducer = wire[UserEventProducer]
+
+  lazy val rewindService = wire[RewindService]
+  lazy val questionController = wire[QuestionController]
+  lazy val questionEventProducer = wire[QuestionEventProducer]
+  lazy val questionEventConsumer = wire[QuestionEventConsumer]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 

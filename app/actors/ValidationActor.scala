@@ -13,6 +13,7 @@ import scala.util.{Failure, Success, Try}
   * ValidationActor class
   */
 class ValidationActor extends Actor {
+  
   override def receive: Receive = {
     case ValidationEventRequest(event) => 
       sender() ! processSingleEvent(event, skipValidation = false)

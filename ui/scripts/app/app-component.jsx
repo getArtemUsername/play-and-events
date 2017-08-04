@@ -5,6 +5,7 @@ import TagManager from './views/tag-manager.jsx';
 import 'event-source-polyfill'
 import {createStore} from "redux";
 import {Provider} from "react-redux";
+import NotificationService from './util/notification-service.js';
 
 
 class AppComponent {
@@ -25,7 +26,9 @@ class AppComponent {
             const actionType = action.type;
 
             if (actionType === 'tags_updated') {
-                updatedState['tags'] = action.data
+                updatedState['tags'] = action.data;
+            } else if (actionType === 'questions_updated') {
+                updatedState['questions'] = action.data;
             }
             return updatedState;
         };
@@ -65,6 +68,16 @@ class AppComponent {
             this.store.dispatch({
                 type: 'tags_updated',
                 data: data['updateData']
+            });
+        } else if (data['updateType'] === 'questions') {
+            this.store.dispatch({
+               type: 'questions_updated',
+               data: data['updateData'] 
+            });
+        } else if (data['error'] !== null) {
+            NotificationService.showMessage({
+               messageType: 'error',
+               messageText: data['error'] 
             });
         }
     };

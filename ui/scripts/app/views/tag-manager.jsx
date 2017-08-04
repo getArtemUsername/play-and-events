@@ -66,8 +66,6 @@ class TagManager extends React.Component {
 
     render = () => {
         const tags = this.props.tags;
-        console.info(tags);
-        console.info(this.props.tags);
         return <div className="tag-manager">
             <div className="tag-manager__input-panel">
                 <div className="tag-manager__input-panel_input">

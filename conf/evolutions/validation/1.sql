@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE tags
 (
   tag_id   UUID PRIMARY KEY,
-  tax_text TEXT NOT NULL
+  tag_text TEXT NOT NULL
 );
 
 CREATE TABLE active_users

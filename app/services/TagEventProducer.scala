@@ -31,14 +31,14 @@ class TagEventProducer(actorSystem: ActorSystem,
     val tagId = UUID.randomUUID()
     val event = TagCreated(tagId, text, createdBy)
     val record = createLogRecord(event)
-    eventValidator.validatiteAndSend(createdBy, record, kafkaProducer)
+    eventValidator.validateAndSend(createdBy, record, kafkaProducer)
   }
 
   def deleteTag(tagId: UUID, deletedBy: UUID): Unit = {
     val event = TagDeleted(tagId, deletedBy)
     val record = createLogRecord(event)
     kafkaProducer.send(record.encode)
-    eventValidator.validatiteAndSend(deletedBy, record, kafkaProducer)
+    eventValidator.validateAndSend(deletedBy, record, kafkaProducer)
   }
 
   private def createLogRecord(eventData: EventData): LogRecord = {
