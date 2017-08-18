@@ -19,7 +19,9 @@ class AppComponent {
     initAppState = () => {
         console.info("initAppState");
         const initialState = {
-            tags: []
+            tags: [],
+            questions: [],
+            questionThread: {}
         };
         const reducer = (state = initialState, action) => {
             const updatedState = {...state};
@@ -29,6 +31,12 @@ class AppComponent {
                 updatedState['tags'] = action.data;
             } else if (actionType === 'questions_updated') {
                 updatedState['questions'] = action.data;
+            } else if (actionType === 'question_thread_loaded') {
+                updatedState['questionThread'] = action.data;
+            } else if (actionType === 'question_thread_updated') {
+                if (state['questionThread']['id'] === action.data['id']) {
+                    updatedState['questionThread'] = action.data;
+                }
             }
             return updatedState;
         };
@@ -71,13 +79,18 @@ class AppComponent {
             });
         } else if (data['updateType'] === 'questions') {
             this.store.dispatch({
-               type: 'questions_updated',
-               data: data['updateData'] 
+                type: 'questions_updated',
+                data: data['updateData']
             });
         } else if (data['error'] !== null) {
             NotificationService.showMessage({
-               messageType: 'error',
-               messageText: data['error'] 
+                messageType: 'error',
+                messageText: data['error']
+            });
+        } else if (data['updateType'] === 'questionThread') {
+            this.store.dispatch({
+               type: 'question_thread_updated',
+               data: data['updateData'] 
             });
         }
     };
@@ -87,7 +100,7 @@ class AppComponent {
         const reactDiv = document.getElementById('reactDiv');
         if (!!reactDiv) {
             ReactDOM.render(<Provider store={this.store}>
-                <TagManager />
+                <TagManager/>
             </Provider>, reactDiv);
         }
     }
