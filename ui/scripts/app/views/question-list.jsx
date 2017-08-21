@@ -20,14 +20,12 @@ class QuestionList extends React.Component {
 
     deleteQuestion = (questionId) => {
         return () => {
-            return () => {
-                ConfirmationService.showConfirmationDialog({
-                    title: 'Delete question',
-                    body: 'Are you sure you want to detele the question?'
-                }, 'warning', () => {
-                    axios.post('/api/deleteQuestion', {'id': questionId})
-                })
-            }
+            ConfirmationService.showConfirmationDialog({
+                title: 'Delete question',
+                body: 'Are you sure you want to detele the question?'
+            }, 'warning', () => {
+                axios.post('/api/deleteQuestion', {'id': questionId})
+            })
         };
     };
 
