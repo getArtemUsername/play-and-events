@@ -7,7 +7,7 @@ import play.api.libs.json.{JsValue, Json, Reads}
 /**
   * QuestionDeleted class
   */
-case class QuestionDeleted(questoinId: UUID, deletedBy: UUID) extends EventData {
+case class QuestionDeleted(questionId: UUID, deletedBy: UUID) extends EventData {
   override def action: String = QuestionDeleted.actionName
   override def json: JsValue = Json.writes[QuestionDeleted].writes(this)
 }

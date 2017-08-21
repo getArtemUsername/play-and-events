@@ -10,7 +10,7 @@ class QuestionComposite extends React.Component {
         return <div className="question-list-composite-container">
             <div className="question-list-composite">
                 <div className="question-list-composite__header">
-                    <ol class="breadcrumb">
+                    <ol className="breadcrumb">
                         <li>
                             <Link to="questions" activeClassName="active">Questions</Link>
                         </li>

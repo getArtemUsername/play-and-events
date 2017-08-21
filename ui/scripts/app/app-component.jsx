@@ -6,7 +6,12 @@ import 'event-source-polyfill'
 import {createStore} from "redux";
 import {Provider} from "react-redux";
 import NotificationService from './util/notification-service.js';
-
+import {Router, Route, IndexRoute, IndexRedirect, browserHistory} from 'react-router';
+import HomeComposite from './views/home-composite.jsx';
+import AskQuestionView from './views/ask-question-view.jsx';
+import QuestionComposite from './views/question-composite.jsx';
+import QuestionListView from './views/question-list.jsx';
+import QuestionDetailsView from './views/question-details-view.jsx'
 
 class AppComponent {
     init = () => {
@@ -55,14 +60,12 @@ class AppComponent {
     };
 
     connectToSSEEndpoint = () => {
-        console.info("connectToSSEEndpoint");
         this.es = new EventSource("/api/sse");
         console.info(this.es);
         this.es.addEventListener('message', this.onServerSideEvent);
     };
 
     onServerSideEvent = (event) => {
-        console.info("onServerSideEvent ");
         console.info(event);
         if (event.type === 'message') {
             this.updateReceived(JSON.parse(event.data));
@@ -70,8 +73,6 @@ class AppComponent {
     };
 
     updateReceived = (data) => {
-        console.info("Update received data ");
-        console.info(data);
         if (data['updateType'] === 'tags') {
             this.store.dispatch({
                 type: 'tags_updated',
@@ -89,8 +90,8 @@ class AppComponent {
             });
         } else if (data['updateType'] === 'questionThread') {
             this.store.dispatch({
-               type: 'question_thread_updated',
-               data: data['updateData'] 
+                type: 'question_thread_updated',
+                data: data['updateData']
             });
         }
     };
@@ -100,7 +101,18 @@ class AppComponent {
         const reactDiv = document.getElementById('reactDiv');
         if (!!reactDiv) {
             ReactDOM.render(<Provider store={this.store}>
-                <TagManager/>
+                <Router history={browserHistory}>
+                    <Route path="/" component={HomeComposite}>
+                        <IndexRedirect to="/ask"/>
+                        <Route path="/tags" component={TagManager}/>
+                        <Route path="/ask" component={AskQuestionView}/>
+                        <Route path="/questions" component={QuestionComposite}>
+                            <IndexRoute component={QuestionListView}/>
+                            <Route path="/questions/:questionId"
+                                   component={QuestionDetailsView}/>
+                        </Route>
+                    </Route>
+                </Router>
             </Provider>, reactDiv);
         }
     }

@@ -16,7 +16,7 @@ class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem
                             configuration: Configuration, materializer: Materializer,
                             readService: ReadService) {
 
-  val topicName = "question"
+  val topicName = "questions"
   val serviceKafkaConsumer = new ServiceKafkaConsumer(Set(topicName), "read", materializer, 
     actorSystem, configuration, handleEvent)
   

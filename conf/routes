@@ -7,6 +7,11 @@ GET         /500                       controllers.MainController.error500
 GET         /api/sse                   controllers.MainController.serverEventStream
 POST        /api/rewind                controllers.MainController.rewind
 
+GET         /tags                      controllers.MainController.index
+GET         /ask                       controllers.MainController.index
+GET         /questions                 controllers.MainController.index
+GET         /questions/$unused<.*>     controllers.MainController.indexParam(unused)
+
 GET         /login                     controllers.AuthController.login
 POST        /login                     controllers.AuthController.doLogin
 GET         /signup                    controllers.AuthController.register

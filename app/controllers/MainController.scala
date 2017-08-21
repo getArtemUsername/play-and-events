@@ -36,6 +36,8 @@ class MainController(userAuthAction: UserAuthAction,
     Ok.chunked(source.via(EventSource.flow)).as("text/event-stream")
   }
   
+  def indexParam(unused: String) = index
+  
   def rewind = Action {
     request =>
       rewindService.refreshState(); Ok
