@@ -1,5 +1,7 @@
 package services
 
+import java.util.UUID
+
 import org.neo4j.driver.v1._
 import org.neo4j.driver.v1.summary.SummaryCounters
 import play.api.Configuration
@@ -77,4 +79,4 @@ object Neo4JQuery {
 }
 
 
-case class Neo4JUpdate(queries: Seq[Neo4JQuery])
+case class Neo4JUpdate(queries: Seq[Neo4JQuery], updateId: Option[UUID] = None)

@@ -65,6 +65,9 @@ trait AppComponents extends BuiltInComponents
   lazy val questionController = wire[QuestionController]
   lazy val questionEventProducer = wire[QuestionEventProducer]
   lazy val questionEventConsumer = wire[QuestionEventConsumer]
+  
+  lazy val answerEventProducer = wire[AnswerEventProducer]
+  lazy val answerEventConsumer = wire[AnswerEventConsumer]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 

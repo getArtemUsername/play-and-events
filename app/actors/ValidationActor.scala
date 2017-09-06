@@ -20,8 +20,8 @@ class ValidationActor extends Actor {
     case RefreshStateCommand(events, fromScratch) =>
       val resetResult = resetState(fromScratch)
       resetResult match {
-        case Some(_) => resetResult
         case None => processEvents(events, skipValidation = true)
+        case _ => resetResult
       }
     case _ => sender() ! Some("Unknown message type!")
   }
@@ -32,7 +32,7 @@ class ValidationActor extends Actor {
     validateUser(userId) {
       val maybeExistingT = Try {
         NamedDB('validation).readOnly { implicit session =>
-          sql"select tag_id from tags where tag_text = $tagText".
+          sql"SELECT tag_id FROM tags WHERE tag_text = $tagText".
             map(_.string("tag_id")).headOption().apply()
         }
       }
@@ -164,7 +164,7 @@ class ValidationActor extends Actor {
   private def updateQuestionDeleted(id: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"delete from question_user where question_id = $id".update().apply()
+        sql"DELETE FROM question_user WHERE question_id = $id".update().apply()
       }
     }
   }
@@ -177,7 +177,7 @@ class ValidationActor extends Actor {
             value => (stmt, idx) => stmt.setObject(idx, value)
           }
           val tagIdsSql = SQLSyntax.in(sqls"tag_id", tags)
-          sql"select * from tags where $tagIdsSql".map(_.string("tag_id")).list().apply().length
+          sql"SELECT * FROM tags WHERE $tagIdsSql".map(_.string("tag_id")).list().apply().length
         }
       }
       existingTagsT match {
@@ -191,14 +191,54 @@ class ValidationActor extends Actor {
   private def updateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"insert into question_user(question_id, user_id) values(${questionId}, ${userId})".update().apply()
+        sql"INSERT INTO question_user(question_id, user_id) VALUES(${questionId}, ${userId})".update().apply()
         tags.foreach { tagId =>
-          sql"insert into tag_question(tag_id, question_id) values(${tagId}, ${questionId})".update().apply()
+          sql"INSERT INTO tag_question(tag_id, question_id) VALUES(${tagId}, ${questionId})".update().apply()
         }
       }
     }
   }
 
+  //Answers
+
+  private def validateAnswerCreated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    validateUser(userId) {
+      val resultT = Try {
+        NamedDB('validation).readOnly { implicit session =>
+          val questionExists =
+            sql"SELECT * FROM question_user WHERE question_id = ${questionId}".map(_.string("question_id"))
+              .headOption().apply().isDefined
+          val answerExists =
+            sql"SELECT * FROM answer_user WHERE answer_id = ${answerId}".map(_.string("answer_id")).headOption()
+              .apply().isDefined
+          val alreadyWritten =
+            sql"""SELECT user_id FROM answer_user au INNER JOIN question_answer qa ON au.answer_id = qa.answer_id 
+                 WHERE question2_id = ${questionId} AND user_id = ${userId}""".map(_.string("user_id")).headOption()
+              .apply().isDefined
+          (questionExists, answerExists, alreadyWritten)
+        }
+      }
+      resultT match {
+        case Success((false, _, _)) => Some("This question doesn't exist!")
+        case Success((_, _, true)) => Some("Users can only give one answer to the question!")
+        case Success((_, true, _)) => Some("This answer already exists!")
+        case Success((true, _, _)) => None
+        case Failure(_) => Some("Validation state exception!")
+      }
+    }
+  }
+
+  private def updateAnswerCreated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx {
+        implicit session =>
+          sql"""INSERT INTO answer_user(answer_id, user_id) VALUES(${answerId}, ${userId})"""
+            .update().apply()
+          sql"""INSERT INTO question_answer(question_id, answer_id) VALUES(${questionId}, ${answerId})"""
+            .update().apply()
+      }
+    }
+  }
 
 
   private def invokeUpdate(block: => Any): Option[String] = {
@@ -210,7 +250,7 @@ class ValidationActor extends Actor {
       case Failure(th) => Some("Validation state exception!")
     }
   }
-  
+
   private def validateAndUpdate(skipValidation: Boolean)
                                (validateBlock: => Option[String])
                                (updateBlock: => Option[String]): Option[String] = {
@@ -271,6 +311,14 @@ class ValidationActor extends Actor {
         } {
           updateQuestionDeleted(decoded.questionId)
         }
+      case AnswerCreated.actionName =>
+        val decoded = event.data.as[AnswerCreated]
+        validateAndUpdate(skipValidation) {
+          validateAnswerCreated(decoded.answerId,
+            decoded.createBy, decoded.questionId)
+        } {
+          updateAnswerCreated(decoded.answerId, decoded.createBy, decoded.questionId)
+        }
       case _ => Some("Unknown event")
     }
   }
@@ -300,6 +348,9 @@ class ValidationActor extends Actor {
           sql"DELETE FROM active_users WHERE 1 > 0".update().apply()
           sql"DELETE FROM question_user WHERE 1 > 0".update().apply()
           sql"DELETE FROM tag_question WHERE 1 > 0".update().apply()
+          sql"DELETE FROM answer_user WHERE 1 > 0".update().apply()
+          sql"DELETE FROM question_answer WHERE 1 > 0".update.apply()
+          sql"DELETE FROM answer_upvoter WHERE 1 > 0".update().apply()
       }
     }
   }

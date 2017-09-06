@@ -23,6 +23,15 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
         queryExecutor.executeUpdate(update)
     }
   }
+  
+  def handleEventWithUpdate(logRecord: LogRecord)(updateBlock: Option[UUID] => Unit): Unit = {
+    val updateInfo = prepareUpdates(logRecord)
+    updateInfo.queries.foreach {
+      update => 
+        queryExecutor.executeUpdate(update)
+    }
+    updateBlock(updateInfo.updateId)
+  }
 
   private def prepareUpdates(record: LogRecord): Neo4JUpdate = {
     record.action match {

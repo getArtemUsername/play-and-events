@@ -1,5 +1,6 @@
 package services
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import actors.InMemoryReadActor
@@ -7,7 +8,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import akka.pattern.ask
 import dao.{LogDao, Neo4JReadDao}
-import model.{Question, Tag}
+import model.{Question, QuestionThread, Tag}
 import play.api.Logger
 
 import scala.concurrent.Future
@@ -36,4 +37,6 @@ class ReadService(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem, logDao: 
       }
     }
   }
+  
+  def getQuestionThread(questionId: UUID): Try[Option[QuestionThread]] = ???
 }
