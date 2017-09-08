@@ -10,7 +10,7 @@ import play.api.libs.json.{JsObject, Json}
   * AnswerUpdated class
   * <p/>
   */
-case class AnswerUpdated(answerId: UUID, answerText: String, questionId: UUID, updatedBy: UUID, update: DateTime) 
+case class AnswerUpdated(answerId: UUID, answerText: String, questionId: UUID, updatedBy: UUID, updated: DateTime) 
   extends EventData {
   override def action = AnswerUpdated.actionName
   override def json: JsObject = Json.writes[AnswerUpdated].writes(this)

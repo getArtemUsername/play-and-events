@@ -50,7 +50,7 @@ class AnswerEventProducer(actorSystem: ActorSystem,
   }
 
   def downvoteAnswer(questionId: UUID, answerId: UUID, userId: UUID): Future[Option[String]] = {
-    val event = AnswerDownvote(answerId, questionId, userId)
+    val event = AnswerDownvoted(answerId, questionId, userId)
     val record = LogRecord.fromEvent(event)
     eventValidator.validateAndSend(userId, record, kafkaProducer)
   }

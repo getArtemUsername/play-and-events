@@ -2,29 +2,37 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET         /                          controllers.MainController.index
-GET         /500                       controllers.MainController.error500
-GET         /api/sse                   controllers.MainController.serverEventStream
-POST        /api/rewind                controllers.MainController.rewind
+GET         /                              controllers.MainController.index
+GET         /500                           controllers.MainController.error500
+GET         /api/sse                       controllers.MainController.serverEventStream
+POST        /api/rewind                    controllers.MainController.rewind
 
-GET         /tags                      controllers.MainController.index
-GET         /ask                       controllers.MainController.index
-GET         /questions                 controllers.MainController.index
-GET         /questions/$unused<.*>     controllers.MainController.indexParam(unused)
+GET         /tags                          controllers.MainController.index
+GET         /ask                           controllers.MainController.index
+GET         /questions                     controllers.MainController.index
+GET         /questions/$unused<.*>         controllers.MainController.indexParam(unused)
 
-GET         /login                     controllers.AuthController.login
-POST        /login                     controllers.AuthController.doLogin
-GET         /signup                    controllers.AuthController.register
-POST        /register                  controllers.AuthController.registerUser
-GET         /logout                    controllers.AuthController.logout
+GET         /login                         controllers.AuthController.login
+POST        /login                         controllers.AuthController.doLogin
+GET         /signup                        controllers.AuthController.register
+POST        /register                      controllers.AuthController.registerUser
+GET         /logout                        controllers.AuthController.logout
 
-POST        /api/createTag             controllers.TagController.createTag
-POST        /api/deleteTag             controllers.TagController.deleteTag
-GET         /api/tags                  controllers.TagController.getTags
+POST        /api/createTag                 controllers.TagController.createTag
+POST        /api/deleteTag                 controllers.TagController.deleteTag
+GET         /api/tags                      controllers.TagController.getTags
 
-GET         /api/questions             controllers.QuestionController.getQuestions
-POST        /api/createQuestion        controllers.QuestionController.createQuestion
-POST        /api/deleteQuestion        controllers.QuestionController.deleteQuestion
+GET         /api/questions                 controllers.QuestionController.getQuestions
+POST        /api/createQuestion            controllers.QuestionController.createQuestion
+POST        /api/deleteQuestion            controllers.QuestionController.deleteQuestion
+
+GET         /api/questionThread/:id        controllers.QuestionController.getQuestionThread(id: java.util.UUID)
+
+POST        /api/createAnswer              controllers.AnswerController.createAnswer
+POST        /api/deleteAnswer              controllers.AnswerController.deleteAnswer
+POST        /api/updateAnswer              controllers.AnswerController.updateAnswer
+POST        /api/upvoteAnswer              controllers.AnswerController.upvoteAnswer
+POST        /api/downvoteAnswer            controllers.AnswerController.downvoteAnswer
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file              controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)

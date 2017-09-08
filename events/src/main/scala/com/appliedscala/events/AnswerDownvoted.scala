@@ -9,13 +9,13 @@ import play.api.libs.json.Json
   * AnswerDownvoted class
   * <p/>
   */
-case class AnswerDownvote(questionId: UUID, answerId: UUID, userId: UUID) extends EventData {
+case class AnswerDownvoted(questionId: UUID, answerId: UUID, userId: UUID) extends EventData {
   override def action = "answer-downvoted"
 
-  override def json = Json.writes[AnswerDownvote].writes(this)
+  override def json = Json.writes[AnswerDownvoted].writes(this)
 }
 
-object AnswerDownvote {
+object AnswerDownvoted {
   val actionName = "answer-downvoted"
-  implicit val reads = Json.reads[AnswerDownvote]
+  implicit val reads = Json.reads[AnswerDownvoted]
 }

@@ -75,4 +75,13 @@ class QuestionController(questionEventProducer: QuestionEventProducer,
         case Success(questions) => Ok(Json.toJson(questions))
       }
   }
+  
+  def getQuestionThread(questionId: UUID) = Action {
+    val threadT = readService.getQuestionThread(questionId)
+    threadT match {
+      case Failure(_) => InternalServerError
+      case Success(Some(thread)) => Ok(Json.toJson(thread))
+      case Success(None) => NotFound
+    }
+  }
 }

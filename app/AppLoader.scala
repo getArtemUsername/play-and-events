@@ -1,4 +1,5 @@
 import com.softwaremill.macwire._
+import controllers.AnswerController
 import controllers.Assets
 import controllers.AuthController
 import controllers.MainController
@@ -66,6 +67,7 @@ trait AppComponents extends BuiltInComponents
   lazy val questionEventProducer = wire[QuestionEventProducer]
   lazy val questionEventConsumer = wire[QuestionEventConsumer]
   
+  lazy val answerController = wire[AnswerController]
   lazy val answerEventProducer = wire[AnswerEventProducer]
   lazy val answerEventConsumer = wire[AnswerEventConsumer]
 

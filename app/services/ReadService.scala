@@ -23,7 +23,7 @@ class ReadService(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem, logDao: 
   def getAllTags: Try[Seq[Tag]] = {
     neo4JReadDao.getAllTags
   }
-  
+
   def getAllQuestions: Try[Seq[Question]] = {
     val namesT = userService.getUserFullNameMap
     val questionsT = neo4JReadDao.getQuestions
@@ -37,6 +37,25 @@ class ReadService(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem, logDao: 
       }
     }
   }
-  
-  def getQuestionThread(questionId: UUID): Try[Option[QuestionThread]] = ???
+
+  def getQuestionThread(questionId: UUID): Try[Option[QuestionThread]] = {
+    val maybeThreadT = neo4JReadDao.getQuestionThread(questionId)
+    val namesT = userService.getUserFullNameMap
+    for {
+      names <- namesT
+      maybeThread <- maybeThreadT
+    } yield {
+      maybeThread.map {
+        thread =>
+          val sourceQuestion = thread.question
+          val sourceAnswer = thread.answers
+          val updatedQuestion = sourceQuestion.copy(authorFullName = names.get(sourceQuestion.authorId))
+          val updatedAnswers = sourceAnswer.map {
+            answer =>
+              answer.copy(authorFullName = names.get(answer.authorId))
+          }
+          QuestionThread(updatedQuestion, updatedAnswers)
+      }
+    }
+  }
 }
