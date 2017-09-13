@@ -13,8 +13,8 @@ import model.Tag
   *
   */
 class InMemoryReadDao(records: Seq[LogRecord]) {
-  import scala.collection.mutable.{Map => MMAp}
-  val tags = MMAp.empty[UUID, Tag]
+  import scala.collection.mutable.{Map => MMap}
+  val tags = MMap.empty[UUID, Tag]
   
   def init(): Unit = records.foreach(processEvent)
   

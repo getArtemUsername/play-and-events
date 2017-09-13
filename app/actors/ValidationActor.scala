@@ -213,7 +213,7 @@ class ValidationActor extends Actor {
               .apply().isDefined
           val alreadyWritten =
             sql"""SELECT user_id FROM answer_user au INNER JOIN question_answer qa ON au.answer_id = qa.answer_id 
-                 WHERE question2_id = ${questionId} AND user_id = ${userId}""".map(_.string("user_id")).headOption()
+                 WHERE question_id = ${questionId} AND user_id = ${userId}""".map(_.string("user_id")).headOption()
               .apply().isDefined
           (questionExists, answerExists, alreadyWritten)
         }
@@ -344,13 +344,13 @@ class ValidationActor extends Actor {
     else invokeUpdate {
       NamedDB('validation).localTx {
         implicit session =>
-          sql"DELETE FROM tags WHERE 1 > 0".update().apply()
-          sql"DELETE FROM active_users WHERE 1 > 0".update().apply()
-          sql"DELETE FROM question_user WHERE 1 > 0".update().apply()
-          sql"DELETE FROM tag_question WHERE 1 > 0".update().apply()
-          sql"DELETE FROM answer_user WHERE 1 > 0".update().apply()
-          sql"DELETE FROM question_answer WHERE 1 > 0".update.apply()
           sql"DELETE FROM answer_upvoter WHERE 1 > 0".update().apply()
+          sql"DELETE FROM tag_question WHERE 1 > 0".update().apply()
+          sql"DELETE FROM question_answer WHERE 1 > 0".update.apply()
+          sql"DELETE FROM active_users WHERE 1 > 0".update().apply()
+          sql"DELETE FROM answer_user WHERE 1 > 0".update().apply()
+          sql"DELETE FROM question_user WHERE 1 > 0".update().apply()
+          sql"DELETE FROM tags WHERE 1 > 0".update().apply()
       }
     }
   }

@@ -46,6 +46,9 @@ class QuestionList extends React.Component {
                                 <span className="glyphicon glyphicon-remove"/>
                             </a>
                         </div>
+                        <div className="question-list__one-question__author">
+                            {"by " + question.authorFullName}
+                        </div>
                     </div>
                 })}
             </div>

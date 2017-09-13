@@ -166,25 +166,38 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   def getQuestions: Try[Seq[Question]] = {
     val query =
-      """match (q:Question) return q"""
+      """
+         MATCH (u:User)-[:WROTE]->(q:Question)-[:BELONGS]->(t: Tag)
+         RETURN q.title as title, q.details as details, q.id as question_id,
+         q.created as created, u.id as user_id, collect(t) as tags"""
     val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
-    recordsT.map {
-      records =>
-        records
-          .map { r => r.get("q") }.map {
-          record =>
-            val id = record.get("id").asString
-            val title = record.get("title").asString
-            val details = Option(record.get("details").asString)
-            val tags = getTagsForQuestion(id)
-            val created = record.get("created").asString
-            val authorId = getAuthorId(id)
-            val authorFullName = record.get("authorFullName").asString
-            Question(UUID.fromString(id), title, details, tags, BaseTypes.parseISO8601(created),
-              UUID.fromString(authorId), Option(authorFullName))
-        }
+    val result = recordsT.map { records =>
+      records.map(recordToQuestion)
     }
+    result
   }
+  
+  private def recordToQuestion(record: Record): Question = {
+    val detailsStr = record.get("details").asString()
+    val details = if (detailsStr.isEmpty) None else Some(detailsStr)
+    val title = record.get("title").asString()
+    val createdStr = record.get("created").asString()
+    val questionId = UUID.fromString(record.get("question_id").asString())
+    val authorId = UUID.fromString(record.get("user_id").asString())
+    val created = BaseTypes.parseISO8601(createdStr)
+    val tagsSize = record.get("tags").size()
+    val tagsIndexes = 0.until(tagsSize).toList
+    val tags = tagsIndexes.map { index =>
+      val values = record.get("tags").get(index).asMap()
+      val code = UUID.fromString(values.get("tagId").asInstanceOf[String])
+      val text = values.get("tagText").asInstanceOf[String]
+      Tag(code, text)
+    }
+    val question = Question(questionId, title, details,
+      tags, created, authorId, None)
+    question
+  }
+
 
   def getAllTags: Try[Seq[Tag]] = {
     val query =
@@ -245,10 +258,10 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val createdFmt = BaseTypes.formatISO8601(created)
     val createAnswer =
       """
-        |MATCH (u: User { id {authorId} } )
-        |CREATE (a: Asnwer { answerText: { answerText: {answerText}, id: {answerId},
+        |MATCH (u: User { id: {authorId} } )
+        |CREATE (a: Answer { answerText: {answerText}, id: {answerId},
         |updated: {updated}, authorId: {authorId} } ),
-        |(a)-[wb: ASNWERED_BY]->(u)-[w:WROTE_ANSWER]->(a)""".stripMargin
+        |(a)-[wb: ANSWERED_BY]->(u)-[w:WROTE_ANSWER]->(a)""".stripMargin
     val createAnswerInfo = Neo4JQuery(createAnswer, Map("answerText" -> answerText, "answerId" -> answerId.toString,
       "updated" -> createdFmt, "authorId" -> createdBy.toString))
     val linkToQuestion =
@@ -278,7 +291,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   private def upvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {
     val update =
       """MATCH (a: Answer { id: {answerId} }), (u: User { id: {userId} }) CREATE (u)-[ha:LIKES]->(a)-[il: IS_LIKED]->(u)"""
-    Seq(Neo4JQuery(update, Map("asnwerId" -> answerId.toString, "userId" -> userId.toString)))
+    Seq(Neo4JQuery(update, Map("answerId" -> answerId.toString, "userId" -> userId.toString)))
   }
 
   private def downvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {

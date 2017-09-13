@@ -59,9 +59,10 @@ class QuestionDetailsView extends React.Component {
         }
 
     };
+
     componentDidMount = () => {
         const questionId = this.props.params['questionId'];
-        axios.get(`/api/questionsThread/${questionId}`).then(this.handleResponse);
+        axios.get(`/api/questionThread/${questionId}`).then(this.handleResponse);
     };
 
     handleResponse = (response) => {
@@ -74,8 +75,8 @@ class QuestionDetailsView extends React.Component {
     };
 
     render = () => {
-        if (this.props.questionThread === null ||
-            this.props.questionThread.question === null) {
+        if (this.props.questionThread == null ||
+            this.props.questionThread.question == null) {
             return <div className="question-thread-view-form">
                 <div className="question-thread-view-form__body">
                     <div className="question-thread-view-form__loading">Loading...</div>
@@ -83,10 +84,10 @@ class QuestionDetailsView extends React.Component {
             </div>
         }
         const question = this.props.questionThread.question;
-        const userIdHolder = document.getElementsById('data-user-id-holder');
-        const maybeUserId = (userIdHolder !== null) ?
+        const userIdHolder = document.getElementById('data-user-id-holder');
+        const maybeUserId = (userIdHolder != null) ?
             userIdHolder.getAttribute('data-user-id') : null;
-        const userNotLoggedIn = maybeUserId === null;
+        const userNotLoggedIn = maybeUserId == null;
 
         const answers = this.props.questionThread.answers;
         const answerInd = answers.findIndex((answer) => {
@@ -123,16 +124,62 @@ class QuestionDetailsView extends React.Component {
                         onClick={this.openEditAnswerForm}
                         type="button">{editAnswerText}</button>
             </div>
+            <div className="question-thread-view-form">
+                <div className="question-thread-view-form__answers">
+                    {answers.map((answer) => {
+                        const updateDate = moment(answer.updated).format('DD/MM/YYYY');
+                        const upvotes = answer.upvotes;
+                        const upvoteButtonDisabled = !maybeUserId || asnwer.authorId === maybeUserId;
+                        const deleteButtonDisabled = !maybeUserId || answer.authorId !== maybeUserId;
+                        const alreadyUpvoted = !!maybeUserId && upvotes.findIndex((id) => {
+                            return id === maybeUserId;
+                        }) !== -1;
+                        const upvoteButton = alreadyUpvoted ?
+                            <button type="button" className="btn btn-default"
+                                    onClick={this.downvoteAnswer(question.id, answer.answerId)}
+                                    disabled={upvoteButtonDisabled}>Downvote</button> :
+                            <button type="button" className="btn btn-default"
+                                    onClick={this.upvoteAnswer(question.id, answer.answerId)}
+                                    disabled={upvoteButtonDisabled}>Downvote</button>;
+                        const authorName = answer.authorFullName;
+                        const answerWritten = `Answer written by ${authorName}, last updated on ${updateDate}`;
+                        return <div className="quesiton-thread-view-form__answer-one" key={answer.asnwerId}>
+                            <div className="question-thread-view-form__answer-one__author-date">
+                                {answerWritten}
+                            </div>
+                            <div className="question-thread-view-form__answer-one__text">
+                                {answer.answerText}
+                            </div>
+                            <div className="question-thread-view-form__answer-one__button">
+                                <div className="button-container">
+                                    <div className="btn-group btn-group-xs" role="group">
+                                        {upvoteButton}
+                                        <button type="button" disabled="disabled"
+                                                className="btn btn-default button-stat-indicator">
+                                            {upvotes.length}</button>
+                                    </div>
+                                </div>
+                                <div className="button-container">
+                                    <button className="btn btn-default btn-xs"
+                                            onClick={this.deleteAnswer(question.id, asnwer.answerId)}
+                                            disabled={deleteButtonDisabled}>Deleted
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    })}
+                </div>
+            </div>
+
             <Modal isOpen={this.state.editAnswerIsOpen} onRequestClose={this.closeEditAnswerForm}
                    style={answerEditStyle} contentLabel="Edit answer">
                 <EditAnswerForm maybeAnswer={maybeAnswer} questionId={question.id}
                                 onAnswerUpdated={this.closeEditAnswerForm}/>
             </Modal>
         </div>
-
-
     }
 }
+
 
 const mapStateToProps = (state) => {
     return {

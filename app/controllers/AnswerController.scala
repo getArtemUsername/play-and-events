@@ -56,6 +56,8 @@ class AnswerController(userAuthAction: UserAuthAction, answerEventProducer: Answ
     )(UpdateAnswerData.apply)(UpdateAnswerData.unapply)
   }
 
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   def createAnswer() = userAuthAction.async {
     implicit request =>
       createAnswerForm.bindFromRequest.fold(
