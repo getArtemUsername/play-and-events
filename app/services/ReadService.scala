@@ -48,9 +48,10 @@ class ReadService(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem, logDao: 
       maybeThread.map {
         thread =>
           val sourceQuestion = thread.question
-          val sourceAnswer = thread.answers
-          val updatedQuestion = sourceQuestion.copy(authorFullName = names.get(sourceQuestion.authorId))
-          val updatedAnswers = sourceAnswer.map {
+          val sourceAnswers = thread.answers
+          val updatedQuestion = sourceQuestion.copy(authorFullName = names
+            .get(sourceQuestion.authorId))
+          val updatedAnswers = sourceAnswers.map {
             answer =>
               answer.copy(authorFullName = names.get(answer.authorId))
           }

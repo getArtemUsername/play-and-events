@@ -6,6 +6,7 @@ import com.appliedscala.events._
 import model.{Answer, Question, QuestionThread, Tag}
 import org.joda.time.DateTime
 import org.neo4j.driver.v1.Record
+import play.api.Logger
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
 import utils.BaseTypes
 
@@ -16,6 +17,7 @@ import scala.util.{Failure, Success, Try}
   */
 class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
+  val logger = Logger("Neo4JReadDao")
 
   def handleEvent(event: LogRecord): Unit = {
     val updates = prepareUpdates(event)
@@ -107,8 +109,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val createdFmt = BaseTypes.formatISO8601(created)
     val detailsPart = details.getOrElse("")
     val createQuestion =
-      """
-        |match (u: User { id: {userId} } ) 
+      """match (u: User { id: {userId} } ) 
         |create (q: Question {title: {title}, id: {questionId}, created: {created}, details: {details} } ), 
         |(q)-[wb: WRITTEN]->(u)-[w:WROTE]->(q)""".stripMargin
     Neo4JQuery(createQuestion, Map("userId" -> addedBy.toString, "title" -> title,
@@ -176,7 +177,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     }
     result
   }
-  
+
   private def recordToQuestion(record: Record): Question = {
     val detailsStr = record.get("details").asString()
     val details = if (detailsStr.isEmpty) None else Some(detailsStr)

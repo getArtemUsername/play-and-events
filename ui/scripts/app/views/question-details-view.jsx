@@ -129,7 +129,7 @@ class QuestionDetailsView extends React.Component {
                     {answers.map((answer) => {
                         const updateDate = moment(answer.updated).format('DD/MM/YYYY');
                         const upvotes = answer.upvotes;
-                        const upvoteButtonDisabled = !maybeUserId || asnwer.authorId === maybeUserId;
+                        const upvoteButtonDisabled = !maybeUserId || answer.authorId === maybeUserId;
                         const deleteButtonDisabled = !maybeUserId || answer.authorId !== maybeUserId;
                         const alreadyUpvoted = !!maybeUserId && upvotes.findIndex((id) => {
                             return id === maybeUserId;
@@ -143,7 +143,7 @@ class QuestionDetailsView extends React.Component {
                                     disabled={upvoteButtonDisabled}>Downvote</button>;
                         const authorName = answer.authorFullName;
                         const answerWritten = `Answer written by ${authorName}, last updated on ${updateDate}`;
-                        return <div className="quesiton-thread-view-form__answer-one" key={answer.asnwerId}>
+                        return <div className="quesiton-thread-view-form__answer-one" key={answer.answerId}>
                             <div className="question-thread-view-form__answer-one__author-date">
                                 {answerWritten}
                             </div>
@@ -161,7 +161,7 @@ class QuestionDetailsView extends React.Component {
                                 </div>
                                 <div className="button-container">
                                     <button className="btn btn-default btn-xs"
-                                            onClick={this.deleteAnswer(question.id, asnwer.answerId)}
+                                            onClick={this.deleteAnswer(question.id, answer.answerId)}
                                             disabled={deleteButtonDisabled}>Deleted
                                     </button>
                                 </div>
