@@ -233,7 +233,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val queryAnswer =
       """
         |MATCH (a: Answer)-[:ANSWERS]->(Question {id: {questionId} }) 
-        |OPTIONAL MATCH (u: User)-[:UPVOTES]->(a)  
+        |OPTIONAL MATCH (u: User)-[:LIKES]->(a)  
         |RETURN collect(distinct u.id) as upvotes, 
         |a.answerText as answerText, a.id as id, 
         |a.authorId as authorId, a.updated as updated
@@ -259,15 +259,15 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val createdFmt = BaseTypes.formatISO8601(created)
     val createAnswer =
       """
-        |MATCH (u: User { id: {authorId} } )
-        |CREATE (a: Answer { answerText: {answerText}, id: {answerId},
+        |MATCH (u:User { id: {authorId} } )
+        |CREATE (a:Answer { answerText: {answerText}, id: {answerId},
         |updated: {updated}, authorId: {authorId} } ),
-        |(a)-[wb: ANSWERED_BY]->(u)-[w:WROTE_ANSWER]->(a)""".stripMargin
+        |(a)-[wb:ANSWERED_BY]->(u)-[w:WROTE_ANSWER]->(a)""".stripMargin
     val createAnswerInfo = Neo4JQuery(createAnswer, Map("answerText" -> answerText, "answerId" -> answerId.toString,
       "updated" -> createdFmt, "authorId" -> createdBy.toString))
     val linkToQuestion =
       """
-        |MATCH (a: Answer { id: {answerId} }), (q: Question { id: {questionId} })
+        |MATCH (a:Answer { id: {answerId} }), (q:Question { id: {questionId} })
         |CREATE (q)-[ha:ANSWERED_IN]->(a)-[an:ANSWERS]->(q)""".stripMargin
     Seq(createAnswerInfo, Neo4JQuery(linkToQuestion, Map("answerId" -> answerId.toString,
       "questionId" -> questionId.toString)))
@@ -277,7 +277,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val updatedFmt = BaseTypes.formatISO8601(updated)
     val update =
       """
-        |MATCH (a: Answer { id: { answerId} })
+        |MATCH (a:Answer { id: { answerId} })
         |SET a.answerText = {answerText}, a.updated = {updated}
       """.stripMargin
     Seq(Neo4JQuery(update, Map("answerId" -> answerId.toString,
@@ -291,12 +291,15 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def upvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {
     val update =
-      """MATCH (a: Answer { id: {answerId} }), (u: User { id: {userId} }) CREATE (u)-[ha:LIKES]->(a)-[il: IS_LIKED]->(u)"""
+      """MATCH (a:Answer { id: {answerId} }), (u:User { id: {userId} }) CREATE (u)-[ha:LIKES]->(a)-[il: IS_LIKED]->(u)"""
     Seq(Neo4JQuery(update, Map("answerId" -> answerId.toString, "userId" -> userId.toString)))
   }
 
   private def downvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {
-    val update = """MATCH (a: Answer { id: {answerId} })-[r:LIKED|IS_LIKED]-(u: User { id: {userID} } ) DELETE r"""
+    val update =
+      """MATCH 
+        |(a:Answer {id: {answerId}})-[r:LIKES|IS_LIKED]-(u:User {id: {userId}}) 
+        |DELETE r""".stripMargin
     Seq(Neo4JQuery(update, Map("answerId" -> answerId.toString, "userId" -> userId.toString)))
   }
 

@@ -91,7 +91,7 @@ class QuestionDetailsView extends React.Component {
 
         const answers = this.props.questionThread.answers;
         const answerInd = answers.findIndex((answer) => {
-            return answer.authorId = maybeUserId;
+            return answer.authorId == maybeUserId;
         });
         const answerExists = answerInd !== -1;
         const maybeAnswer = answerExists ? answers[answerInd] : null;
@@ -140,7 +140,7 @@ class QuestionDetailsView extends React.Component {
                                     disabled={upvoteButtonDisabled}>Downvote</button> :
                             <button type="button" className="btn btn-default"
                                     onClick={this.upvoteAnswer(question.id, answer.answerId)}
-                                    disabled={upvoteButtonDisabled}>Downvote</button>;
+                                    disabled={upvoteButtonDisabled}>Upvote</button>;
                         const authorName = answer.authorFullName;
                         const answerWritten = `Answer written by ${authorName}, last updated on ${updateDate}`;
                         return <div className="quesiton-thread-view-form__answer-one" key={answer.answerId}>

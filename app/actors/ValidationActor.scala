@@ -240,6 +240,68 @@ class ValidationActor extends Actor {
     }
   }
 
+  private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val UserIdStr = userId.toString
+    val resultT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        val questionExists =
+          sql"select * from question_user where question_id = ${questionId}".
+            map(_.string("question_id")).headOption().apply().isDefined
+        val answerAuthor =
+          sql"select user_id from answer_user where answer_id = ${answerId}".
+            map(_.string("user_id")).headOption().apply()
+        val alreadyUpvoted =
+          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+            map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
+        (questionExists, answerAuthor, alreadyUpvoted)
+      }
+    }
+    resultT match {
+      case Success((false, _, _)) => Some("This question doesn't exist!")
+      case Success((_, None, _)) => Some("This answer doesn't exist!")
+      case Success((_, Some(UserIdStr), _)) => Some("Users cannot like their own answers!")
+      case Success((_, Some(_), true)) => Some("Users cannot like answers more than once!")
+      case Success((_, Some(_), false)) => None
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"insert into answer_upvoter(answer_id, upvoted_by_user_id) values(${answerId}, ${userId})".update().apply()
+      }
+    }
+  }
+
+  private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val resultT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        val questionExists =
+          sql"select * from question_user where question_id = ${questionId}".
+            map(_.string("question_id")).headOption().apply().isDefined
+        val alreadyUpvoted =
+          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+            map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
+        (questionExists, alreadyUpvoted)
+      }
+    }
+    resultT match {
+      case Success((false, _)) => Some("This question doesn't exist!")
+      case Success((_, true)) => None
+      case Success((_, false)) => Some("Users cannot downvote what they haven't upvoted")
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"delete from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}".update().apply()
+      }
+    }
+  }
+
 
   private def invokeUpdate(block: => Any): Option[String] = {
     val result = Try {
@@ -318,6 +380,24 @@ class ValidationActor extends Actor {
             decoded.createBy, decoded.questionId)
         } {
           updateAnswerCreated(decoded.answerId, decoded.createBy, decoded.questionId)
+        }
+      case AnswerUpvoted.actionName =>
+        val decoded = event.data.as[AnswerUpvoted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerUpvoted(decoded.answerId,
+            decoded.userId, decoded.questionId)
+        } {
+          updateAnswerUpvoted(decoded.answerId,
+            decoded.userId)
+        }
+      case AnswerDownvoted.actionName =>
+        val decoded = event.data.as[AnswerDownvoted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerDownvoted(decoded.answerId,
+            decoded.userId, decoded.questionId)
+        } {
+          updateAnswerDownvoted(decoded.answerId,
+            decoded.userId)
         }
       case _ => Some("Unknown event")
     }

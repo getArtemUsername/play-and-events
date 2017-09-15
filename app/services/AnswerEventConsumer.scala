@@ -15,7 +15,6 @@ import play.api.Configuration
   * Description...
   *
   * @author artem klevakin
-  * @created 23.08.17
   */
 class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao,
                           actorSystem: ActorSystem,
@@ -32,16 +31,13 @@ class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao,
   }
 
   private def adjustReadState(logRecord: LogRecord): Unit = {
-    neo4JReadDao.handleEventWithUpdate(logRecord) {
-      maybeUpdateId => 
-        maybeUpdateId.foreach {
-          updateId => 
-            val threadT = readService.getQuestionThread(updateId)
+    neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId => 
+        maybeUpdateId.foreach { updateId =>
             
-            threadT.foreach {
-              maybeThread =>
-                maybeThread.foreach {
-                  thread => 
+            val threadT = readService.getQuestionThread(updateId)
+            threadT.foreach { maybeThread =>
+                maybeThread.foreach { thread => 
+                    
                     val update =ServerSentMessage.create("questionThread", thread)
                     val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
                     esActor ! EventStreamActor.DataUpdated(update.json)

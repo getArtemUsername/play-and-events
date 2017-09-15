@@ -44,13 +44,13 @@ class AnswerEventProducer(actorSystem: ActorSystem,
   }
 
   def upvoteAnswer(questionId: UUID, answerId: UUID, userId: UUID): Future[Option[String]] = {
-    val event = AnswerUpvoted(answerId, questionId, userId)
+    val event = AnswerUpvoted(answerId, userId, questionId)
     val record = LogRecord.fromEvent(event)
     eventValidator.validateAndSend(userId, record, kafkaProducer)
   }
 
   def downvoteAnswer(questionId: UUID, answerId: UUID, userId: UUID): Future[Option[String]] = {
-    val event = AnswerDownvoted(answerId, questionId, userId)
+    val event = AnswerDownvoted(questionId, answerId, userId)
     val record = LogRecord.fromEvent(event)
     eventValidator.validateAndSend(userId, record, kafkaProducer)
   }
