@@ -164,7 +164,7 @@ class ValidationActor extends Actor {
   private def updateQuestionDeleted(id: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"DELETE FROM question_user WHERE question_id = $ID".update().apply()
+        sql"DELETE FROM question_user WHERE question_id = $id".update().apply()
       }
     }
   }
