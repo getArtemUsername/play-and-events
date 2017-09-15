@@ -12,10 +12,10 @@ import play.api.Configuration
   */
 class LogRecordConsumer(logDao: LogDao, actorSystem: ActorSystem, configuration: Configuration,
                         materializer: Materializer) {
-  val topics: Set[String] = Seq("tags", "users", "questions").toSet
+  val topics: Set[String] = Seq("tags", "users", "questions", "answers").toSet
   val serviceKafkaConsumer = new ServiceKafkaConsumer(topics, "logs", materializer, actorSystem,
     configuration, handleEvent)
-  
+
   private def handleEvent(event: String): Unit = {
     val maybeGenericEnvelope = LogRecord.decode(event)
     maybeGenericEnvelope.foreach {

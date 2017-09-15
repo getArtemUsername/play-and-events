@@ -36,7 +36,6 @@ class AnswerEventProducer(actorSystem: ActorSystem,
   }
 
   def updateAnswer(questionId: UUID, answerId: UUID, updatedBy: UUID, answerText: String): Future[Option[String]] = {
-    val answerId = UUID.randomUUID()
     val updated = DateTime.now()
     val event = AnswerUpdated(answerId, answerText, questionId, updatedBy, updated)
     val record = LogRecord.fromEvent(event)

@@ -39,7 +39,7 @@ class AppComponent {
             } else if (actionType === 'question_thread_loaded') {
                 updatedState['questionThread'] = action.data;
             } else if (actionType === 'question_thread_updated') {
-                if (state['questionThread']['id'] == action.data['id']) {
+                if (state['questionThread']['id'] === action.data['id']) {
                     updatedState['questionThread'] = action.data;
                 }
             }
@@ -83,7 +83,7 @@ class AppComponent {
                 type: 'questions_updated',
                 data: data['updateData']
             });
-        } else if (data['error'] !== null) {
+        } else if (data['error'] != null) {
             NotificationService.showMessage({
                 messageType: 'error',
                 messageText: data['error']

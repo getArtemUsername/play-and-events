@@ -240,8 +240,52 @@ class ValidationActor extends Actor {
     }
   }
 
+  private def validateAnswerDeleted(answerId: UUID, userId: UUID): Option[String] = {
+    validateUser(userId) {
+      val userIdStr = userId.toString
+      val maybeAnswerOwnerT = Try {
+        NamedDB('validation).readOnly { implicit session =>
+          sql"select user_id from answer_user where answer_id = ${answerId}".
+            map(_.string("user_id")).headOption().apply()
+        }
+      }
+      maybeAnswerOwnerT match {
+        case Success(None) => Some("The answer doesn't exists")
+        case Success(Some(`userIdStr`)) => None
+        case Success(Some(_)) => Some("The answer was written by another user!")
+        case _ => Some("Validation state exception!")
+      }
+    }
+  }
+
+  private def updateAnswerDeleted(answerId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"delete from answer_user where answer_id = ${answerId}".update().apply()
+      }
+    }
+  }
+
+  private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val userIdStr = userId.toString
+    val maybeAnswerOwnerT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        sql"select user_id from answer_user where answer_id = ${answerId}".
+          map(_.string("user_id")).headOption().apply()
+      }
+    }
+    maybeAnswerOwnerT match {
+      case Success(None) => Some("The answer doesn't exists")
+      case Success(Some(`userIdStr`)) => None
+      case Success(Some(_)) => Some("The answer was written by another user!")
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerUpdated(): Option[String] = None
+
   private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
-    val UserIdStr = userId.toString
+    val userIdStr = userId.toString
     val resultT = Try {
       NamedDB('validation).readOnly { implicit session =>
         val questionExists =
@@ -259,7 +303,7 @@ class ValidationActor extends Actor {
     resultT match {
       case Success((false, _, _)) => Some("This question doesn't exist!")
       case Success((_, None, _)) => Some("This answer doesn't exist!")
-      case Success((_, Some(UserIdStr), _)) => Some("Users cannot like their own answers!")
+      case Success((_, Some(`userIdStr`), _)) => Some("Users cannot like their own answers!")
       case Success((_, Some(_), true)) => Some("Users cannot like answers more than once!")
       case Success((_, Some(_), false)) => None
       case _ => Some("Validation state exception!")
@@ -381,6 +425,18 @@ class ValidationActor extends Actor {
         } {
           updateAnswerCreated(decoded.answerId, decoded.createBy, decoded.questionId)
         }
+      case AnswerDeleted.actionName =>
+        val decoded = event.data.as[AnswerDeleted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerDeleted(decoded.answerId,
+            decoded.deletedBy)
+        } { updateAnswerDeleted(decoded.answerId) }
+      case AnswerUpdated.actionName =>
+        val decoded = event.data.as[AnswerUpdated]
+        validateAndUpdate(skipValidation) {
+          validateAnswerUpdated(decoded.answerId,
+            decoded.updatedBy, decoded.questionId)
+        } { updateAnswerUpdated() }
       case AnswerUpvoted.actionName =>
         val decoded = event.data.as[AnswerUpvoted]
         validateAndUpdate(skipValidation) {
