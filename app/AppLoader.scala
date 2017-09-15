@@ -1,4 +1,5 @@
 import com.softwaremill.macwire._
+import controllers.AdminController
 import controllers.AnswerController
 import controllers.Assets
 import controllers.AuthController
@@ -70,6 +71,8 @@ trait AppComponents extends BuiltInComponents
   lazy val answerController = wire[AnswerController]
   lazy val answerEventProducer = wire[AnswerEventProducer]
   lazy val answerEventConsumer = wire[AnswerEventConsumer]
+  
+  lazy val adminController = wire[AdminController]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 

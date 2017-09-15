@@ -21,7 +21,7 @@ class ValidationActor extends Actor {
       val resetResult = resetState(fromScratch)
       resetResult match {
         case None => processEvents(events, skipValidation = true)
-        case _ => resetResult
+        case Some(_) => resetResult
       }
     case _ => sender() ! Some("Unknown message type!")
   }
@@ -164,7 +164,7 @@ class ValidationActor extends Actor {
   private def updateQuestionDeleted(id: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"DELETE FROM question_user WHERE question_id = $id".update().apply()
+        sql"DELETE FROM question_user WHERE question_id = $ID".update().apply()
       }
     }
   }
@@ -245,7 +245,7 @@ class ValidationActor extends Actor {
       val userIdStr = userId.toString
       val maybeAnswerOwnerT = Try {
         NamedDB('validation).readOnly { implicit session =>
-          sql"select user_id from answer_user where answer_id = ${answerId}".
+          sql"SELECT user_id FROM answer_user WHERE answer_id = ${answerId}".
             map(_.string("user_id")).headOption().apply()
         }
       }
@@ -261,7 +261,7 @@ class ValidationActor extends Actor {
   private def updateAnswerDeleted(answerId: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"delete from answer_user where answer_id = ${answerId}".update().apply()
+        sql"DELETE FROM answer_user WHERE answer_id = ${answerId}".update().apply()
       }
     }
   }
@@ -270,7 +270,7 @@ class ValidationActor extends Actor {
     val userIdStr = userId.toString
     val maybeAnswerOwnerT = Try {
       NamedDB('validation).readOnly { implicit session =>
-        sql"select user_id from answer_user where answer_id = ${answerId}".
+        sql"SELECT user_id FROM answer_user WHERE answer_id = ${answerId}".
           map(_.string("user_id")).headOption().apply()
       }
     }
@@ -289,13 +289,13 @@ class ValidationActor extends Actor {
     val resultT = Try {
       NamedDB('validation).readOnly { implicit session =>
         val questionExists =
-          sql"select * from question_user where question_id = ${questionId}".
+          sql"SELECT * FROM question_user WHERE question_id = ${questionId}".
             map(_.string("question_id")).headOption().apply().isDefined
         val answerAuthor =
-          sql"select user_id from answer_user where answer_id = ${answerId}".
+          sql"SELECT user_id FROM answer_user WHERE answer_id = ${answerId}".
             map(_.string("user_id")).headOption().apply()
         val alreadyUpvoted =
-          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+          sql"""SELECT upvoted_by_user_id FROM answer_upvoter WHERE answer_id = ${answerId} AND upvoted_by_user_id = ${userId}""".
             map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
         (questionExists, answerAuthor, alreadyUpvoted)
       }
@@ -313,7 +313,7 @@ class ValidationActor extends Actor {
   private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"insert into answer_upvoter(answer_id, upvoted_by_user_id) values(${answerId}, ${userId})".update().apply()
+        sql"INSERT INTO answer_upvoter(answer_id, upvoted_by_user_id) VALUES(${answerId}, ${userId})".update().apply()
       }
     }
   }
@@ -322,10 +322,10 @@ class ValidationActor extends Actor {
     val resultT = Try {
       NamedDB('validation).readOnly { implicit session =>
         val questionExists =
-          sql"select * from question_user where question_id = ${questionId}".
+          sql"SELECT * FROM question_user WHERE question_id = ${questionId}".
             map(_.string("question_id")).headOption().apply().isDefined
         val alreadyUpvoted =
-          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+          sql"""SELECT upvoted_by_user_id FROM answer_upvoter WHERE answer_id = ${answerId} AND upvoted_by_user_id = ${userId}""".
             map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
         (questionExists, alreadyUpvoted)
       }
@@ -341,7 +341,7 @@ class ValidationActor extends Actor {
   private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
-        sql"delete from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}".update().apply()
+        sql"DELETE FROM answer_upvoter WHERE answer_id = ${answerId} AND upvoted_by_user_id = ${userId}".update().apply()
       }
     }
   }
@@ -380,6 +380,7 @@ class ValidationActor extends Actor {
         } {
           updateUserActivated(decoded.id)
         }
+
       case UserDeactivated.actionName =>
         val decoded = event.data.as[UserDeactivated]
         validateAndUpdate(skipValidation) {
@@ -387,6 +388,7 @@ class ValidationActor extends Actor {
         } {
           updateUserDeactivated(decoded.id)
         }
+
       case TagCreated.actionName =>
         val decoded = event.data.as[TagCreated]
         validateAndUpdate(skipValidation) {
@@ -394,6 +396,7 @@ class ValidationActor extends Actor {
         } {
           updateTagCreated(decoded.id, decoded.text)
         }
+
       case TagDeleted.actionName =>
         val decoded = event.data.as[TagDeleted]
         validateAndUpdate(skipValidation) {
@@ -401,6 +404,7 @@ class ValidationActor extends Actor {
         } {
           updateTagDeleted(decoded.id)
         }
+
       case QuestionCreated.actionName =>
         val decoded = event.data.as[QuestionCreated]
         validateAndUpdate(skipValidation) {
@@ -410,6 +414,7 @@ class ValidationActor extends Actor {
           updateQuestionCreated(decoded.questionId,
             decoded.createdBy, decoded.tags)
         }
+
       case QuestionDeleted.actionName =>
         val decoded = event.data.as[QuestionDeleted]
         validateAndUpdate(skipValidation) {
@@ -417,6 +422,7 @@ class ValidationActor extends Actor {
         } {
           updateQuestionDeleted(decoded.questionId)
         }
+
       case AnswerCreated.actionName =>
         val decoded = event.data.as[AnswerCreated]
         validateAndUpdate(skipValidation) {
@@ -425,18 +431,25 @@ class ValidationActor extends Actor {
         } {
           updateAnswerCreated(decoded.answerId, decoded.createBy, decoded.questionId)
         }
+
       case AnswerDeleted.actionName =>
         val decoded = event.data.as[AnswerDeleted]
         validateAndUpdate(skipValidation) {
           validateAnswerDeleted(decoded.answerId,
             decoded.deletedBy)
-        } { updateAnswerDeleted(decoded.answerId) }
+        } {
+          updateAnswerDeleted(decoded.answerId)
+        }
+
       case AnswerUpdated.actionName =>
         val decoded = event.data.as[AnswerUpdated]
         validateAndUpdate(skipValidation) {
           validateAnswerUpdated(decoded.answerId,
             decoded.updatedBy, decoded.questionId)
-        } { updateAnswerUpdated() }
+        } {
+          updateAnswerUpdated()
+        }
+
       case AnswerUpvoted.actionName =>
         val decoded = event.data.as[AnswerUpvoted]
         validateAndUpdate(skipValidation) {
@@ -446,6 +459,7 @@ class ValidationActor extends Actor {
           updateAnswerUpvoted(decoded.answerId,
             decoded.userId)
         }
+
       case AnswerDownvoted.actionName =>
         val decoded = event.data.as[AnswerDownvoted]
         validateAndUpdate(skipValidation) {
@@ -455,6 +469,7 @@ class ValidationActor extends Actor {
           updateAnswerDownvoted(decoded.answerId,
             decoded.userId)
         }
+
       case _ => Some("Unknown event")
     }
   }

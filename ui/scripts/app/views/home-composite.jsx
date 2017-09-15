@@ -1,9 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router';
+import {Link} from 'react-router';
+import {connect} from "react-redux";
 
 class HomeComposite extends React.Component {
+    refresh = () => {
+        window.location.reload();
+    };
+
     render = () => {
+        const refreshPanel = this.props.refreshNeeded ?
+            <div className="view-home-composite__refresh-panel"
+                 onClick={this.refresh}>
+                Server data was updated. Click to refresh the page</div> : "";
         return <div>
+            {refreshPanel}
             <div className="view-home-composite__main-panel">
                 <div className="view-home-composite__side-menu-panel">
                     <ul id="sideMenu" className="nav nav-stacked">
@@ -24,4 +34,7 @@ class HomeComposite extends React.Component {
     }
 }
 
-export default HomeComposite
+const mapStateToProps = (state) => {
+    return {refreshNeeded: state.refreshNeeded}
+};
+export default connect(mapStateToProps)(HomeComposite);

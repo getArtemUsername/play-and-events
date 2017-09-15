@@ -5,7 +5,7 @@
 GET         /                              controllers.MainController.index
 GET         /500                           controllers.MainController.error500
 GET         /api/sse                       controllers.MainController.serverEventStream
-POST        /api/rewind                    controllers.MainController.rewind
+
 
 GET         /tags                          controllers.MainController.index
 GET         /ask                           controllers.MainController.index
@@ -33,6 +33,9 @@ POST        /api/deleteAnswer              controllers.AnswerController.deleteAn
 POST        /api/updateAnswer              controllers.AnswerController.updateAnswer
 POST        /api/upvoteAnswer              controllers.AnswerController.upvoteAnswer
 POST        /api/downvoteAnswer            controllers.AnswerController.downvoteAnswer
+
+POST        /api/rewind                    controllers.AdminController.rewind
+GET         /admin                         controllers.AdminController.admin
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)

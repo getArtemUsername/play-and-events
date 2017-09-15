@@ -42,6 +42,8 @@ class AppComponent {
                 if (state['questionThread']['id'] === action.data['id']) {
                     updatedState['questionThread'] = action.data;
                 }
+            } else if (actionType === 'state_rebuild') {
+                updatedState['refreshNeeded'] = true;
             }
             return updatedState;
         };
@@ -92,6 +94,11 @@ class AppComponent {
             this.store.dispatch({
                 type: 'question_thread_updated',
                 data: data['updateData']
+            });
+        } else if (data['updateType'] == 'stateRebuild') {
+            this.store.dispatch({
+                type: 'state_rebuild',
+                data: true
             });
         }
     };
