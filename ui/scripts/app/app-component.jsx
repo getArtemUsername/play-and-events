@@ -15,10 +15,14 @@ import QuestionDetailsView from './views/question-details-view.jsx'
 
 class AppComponent {
     init = () => {
-        this.initLoginRedirecting();
-        this.initAppState();
-        this.connectToSSEEndpoint();
-        this.renderComponent();
+        const reactDiv = document.getElementById('reactDiv');
+        if (!!reactDiv) {
+            this.initLoginRedirecting();
+            this.initAppState();
+            //this.connectToSSEEndpoint();
+            this.connectToWSEndpoint();
+            this.renderComponent();
+        }
     };
 
     initAppState = () => {
@@ -45,9 +49,31 @@ class AppComponent {
             } else if (actionType === 'state_rebuild') {
                 updatedState['refreshNeeded'] = true;
             }
+            
+            this.updateQuestionThreadId(action);
             return updatedState;
         };
         this.store = createStore(reducer);
+    };
+
+    updateQuestionThreadId = (action) => {
+        this.useWS(() => {
+            if (action.type == 'question_thread_updated' ||
+                action.type == 'question_thread_loaded') {
+            }
+            const questionThreadId = action.data.question.id;
+            this.streamWS.send(`{"questionThreadId": "${questionThreadId}"}`);
+        });
+    };
+
+    useWS = (callback) => {
+        if (this.streamWS.readyState === 1) {
+            callback();
+        } else {
+            setTimeout(() => {
+                this.useWS(callback);
+            }, 1000);
+        }
     };
 
     initLoginRedirecting = () => {
@@ -59,6 +85,11 @@ class AppComponent {
             }
             return Promise.reject(error);
         });
+    };
+
+    connectToWSEndpoint = () => {
+        this.streamWS = new WebSocket("ws://localhost:9000/api/wsStream");
+        this.streamWS.onmessage = this.onServerSideEvent;
     };
 
     connectToSSEEndpoint = () => {

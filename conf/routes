@@ -5,6 +5,7 @@
 GET         /                              controllers.MainController.index
 GET         /500                           controllers.MainController.error500
 GET         /api/sse                       controllers.MainController.serverEventStream
+GET         /api/wsStream                  controllers.MainController.wsStream
 
 
 GET         /tags                          controllers.MainController.index

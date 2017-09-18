@@ -4,9 +4,9 @@ import java.util.UUID
 
 import actors.EventStreamActor
 import akka.actor.ActorSystem
-import akka.stream.Materializer
+import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.actor.ActorPublisher
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import model._
 import play.api.libs.EventSource
 import play.api.libs.json.JsValue
@@ -35,9 +35,25 @@ class MainController(userAuthAction: UserAuthAction,
     val source = Source.fromPublisher(eventStorePublisher)
     Ok.chunked(source.via(EventSource.flow)).as("text/event-stream")
   }
-  
+
+  def wsStream = WebSocket.accept[JsValue, JsValue] {
+    request ⇒
+      import actors.WSStreamActor
+      implicit val materializer = mat
+      implicit val actorFactory = actorSystem
+      val maybeUserId = userAuthAction.checkUser(request).map(_.userId)
+
+      val (out, publisher) = Source.actorRef[JsValue](bufferSize = 16, OverflowStrategy.dropNew)
+        .toMat(Sink.asPublisher(fanout = false))(Keep.both).run()
+      val actorRef = actorSystem.actorOf(WSStreamActor.props(out), WSStreamActor.name(maybeUserId))
+      val sink = Sink.actorRef[JsValue](actorRef, akka.actor.Status.Success(()))
+      val source = Source.fromPublisher(publisher)
+      Flow.fromSinkAndSource(sink, source)
+
+  }
+
   def indexParam(unused: String) = index
-  
+
   def rewind = Action {
     request =>
       rewindService.refreshState(); Ok
