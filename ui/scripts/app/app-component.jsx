@@ -49,7 +49,7 @@ class AppComponent {
             } else if (actionType === 'state_rebuild') {
                 updatedState['refreshNeeded'] = true;
             }
-            
+
             this.updateQuestionThreadId(action);
             return updatedState;
         };
@@ -60,9 +60,9 @@ class AppComponent {
         this.useWS(() => {
             if (action.type == 'question_thread_updated' ||
                 action.type == 'question_thread_loaded') {
+                const questionThreadId = action.data.question.id;
+                this.streamWS.send(`{"questionThreadId": "${questionThreadId}"}`);
             }
-            const questionThreadId = action.data.question.id;
-            this.streamWS.send(`{"questionThreadId": "${questionThreadId}"}`);
         });
     };
 
